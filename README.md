@@ -4,8 +4,16 @@
 社内の PDF に書いてあることだけで答え、答えの下に出典（ファイル名とページ）を出します。
 文書に無いことは「該当する情報が見つかりません」と答えます。
 
-- 本番: https://techbridge-doc-search.vercel.app
-- 入れるのは `@techbridge.co.jp` のメールアドレスだけです
+入れるのは `@techbridge.co.jp` のメールアドレスだけです。
+
+## まず見るもの
+
+| 中身 | 場所 |
+| --- | --- |
+| 公開 URL | https://techbridge-doc-search.vercel.app |
+| 運用手順 | [運用マニュアル.md](運用マニュアル.md) |
+| 構成図 | [overview-for-it.png](overview-for-it.png) |
+| Phase 2 の提案 | [Phase2提案書.md](Phase2提案書.md) |
 
 ## しくみ
 
