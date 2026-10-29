@@ -1,0 +1,277 @@
+<title>社内文書検索AI 全体図</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+  /* レイアウト: 白い板の上に2段の流れ図（上=取り込み、下=検索）。下に補足 */
+  :root {
+    --bg: #eef1f4;
+    --card: #ffffff;
+    --fg: #1d2633;
+    --muted: #5d6878;
+    --rule: #d6dce4;
+    --ingest: #2f64a8;
+    --ingest-soft: #6a9bd8;
+    --search: #3f8a3c;
+    --search-soft: #7fb87b;
+    --store: #e8873a;
+    --store-soft: #f3ac6e;
+    --display: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+    --body: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11161d; --card: #1a212b; --fg: #e6ebf2; --muted: #9aa6b6; --rule: #2e3846;
+      --ingest: #6b9fe0; --ingest-soft: #3f6fae; --search: #74bf6f; --search-soft: #44803f;
+      --store: #f09a52; --store-soft: #b8672a; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11161d; --card: #1a212b; --fg: #e6ebf2; --muted: #9aa6b6; --rule: #2e3846;
+    --ingest: #6b9fe0; --ingest-soft: #3f6fae; --search: #74bf6f; --search-soft: #44803f;
+    --store: #f09a52; --store-soft: #b8672a; color-scheme: dark;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--body);
+    padding-block: 32px 48px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  main { max-width: 1180px; margin: 0 auto; display: grid; gap: 20px; }
+  .board {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 24px 20px 12px;
+  }
+  .scroll { overflow-x: auto; }
+  svg { display: block; width: 100%; min-width: 760px; height: auto; }
+  .caption {
+    text-align: center;
+    color: var(--muted);
+    font-size: 15px;
+    letter-spacing: .04em;
+    margin: 0;
+  }
+  .notes {
+    max-width: 68ch;
+    margin: 0 auto;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.8;
+    display: grid;
+    gap: 6px;
+  }
+  .notes p { margin: 0; }
+  .notes strong { color: var(--fg); font-weight: 700; }
+
+  /* 図の中の文字と色 */
+  .h { font-family: var(--display); font-weight: 900; font-size: 26px; fill: var(--fg); }
+  .name { font-family: var(--display); font-weight: 700; font-size: 18px; fill: var(--fg); text-anchor: middle; }
+  .tech { font-family: var(--body); font-size: 13px; fill: var(--muted); text-anchor: middle; }
+  .tag { font-family: var(--body); font-size: 13px; font-weight: 500; text-anchor: middle; }
+  .paper { fill: var(--card); }
+  .ingest { color: var(--ingest); }
+  .search { color: var(--search); }
+  .arrow-i { stroke: var(--ingest-soft); stroke-width: 4; fill: none; }
+  .arrow-s { stroke: var(--search-soft); stroke-width: 4; fill: none; }
+  .head-i { fill: var(--ingest-soft); }
+  .head-s { fill: var(--search-soft); }
+  .link { stroke: var(--search); stroke-width: 4; fill: none; }
+  .db-body { fill: var(--store); }
+  .db-top { fill: var(--store-soft); }
+  .db-band { stroke: var(--card); stroke-width: 3; fill: none; }
+  .on-color { fill: var(--card); }
+</style>
+
+<main>
+  <section class="board" aria-label="社内文書検索AIの全体図">
+    <div class="scroll">
+      <svg viewBox="0 0 1200 650" role="img" aria-labelledby="fig-title">
+        <title id="fig-title">取り込み（PDF → 文字の取り出し → 区切る → 数値化 → Supabaseに保存）と、検索（質問 → 数値化 → 近い箇所を探す → 上位5件 → Claudeが回答 → 出典つきで表示）の流れ</title>
+        <defs>
+          <marker id="mi" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path class="head-i" d="M0 0 L10 5 L0 10 z"/></marker>
+          <marker id="ms" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path class="head-s" d="M0 0 L10 5 L0 10 z"/></marker>
+          <marker id="ml" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path fill="var(--search)" d="M0 0 L10 5 L0 10 z"/></marker>
+
+          <!-- PDF -->
+          <g id="i-pdf">
+            <rect x="-38" y="-46" width="52" height="66" rx="4" class="paper" stroke="currentColor" stroke-width="3"/>
+            <path d="M-14 -26 H22 L36 -12 V46 H-14 Z" class="paper" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M22 -26 V-12 H36" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M-4 -6 H26 M-4 4 H26 M-4 14 H18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            <rect x="-26" y="24" width="38" height="18" rx="3" fill="currentColor"/>
+            <text x="-7" y="37.5" class="on-color" font-size="12" font-weight="700" text-anchor="middle" font-family="var(--body)">PDF</text>
+          </g>
+
+          <!-- 文字を取り出す -->
+          <g id="i-extract">
+            <rect x="-46" y="-42" width="58" height="42" rx="4" class="paper" stroke="currentColor" stroke-width="3"/>
+            <path d="M-46 -32 H12" stroke="currentColor" stroke-width="3"/>
+            <path d="M-38 -20 H0 M-38 -10 H-8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            <rect x="-12" y="2" width="58" height="42" rx="4" class="paper" stroke="currentColor" stroke-width="3"/>
+            <path d="M-12 12 H46" stroke="currentColor" stroke-width="3"/>
+            <path d="M-4 24 H36 M-4 34 H26" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            <path d="M18 -30 Q34 -30 34 -10" fill="none" stroke="currentColor" stroke-width="3"/>
+            <path d="M28 -14 L34 -6 L40 -14" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M-36 4 Q-36 26 -18 26" fill="none" stroke="currentColor" stroke-width="3"/>
+            <path d="M-22 20 L-14 26 L-22 32" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+          </g>
+
+          <!-- 小さく区切る -->
+          <g id="i-chunk">
+            <rect x="-48" y="-38" width="62" height="20" rx="2" fill="currentColor"/>
+            <rect x="20" y="-38" width="28" height="20" rx="2" fill="currentColor" opacity=".6"/>
+            <rect x="-48" y="-10" width="40" height="20" rx="2" fill="currentColor" opacity=".6"/>
+            <rect x="-2" y="-10" width="50" height="20" rx="2" fill="currentColor"/>
+            <rect x="-48" y="18" width="72" height="20" rx="2" fill="currentColor"/>
+            <rect x="30" y="18" width="18" height="20" rx="2" fill="currentColor" opacity=".6"/>
+          </g>
+
+          <!-- AIが意味を数値化 -->
+          <g id="i-embed">
+            <path d="M-34 -32 V-24 M-22 -32 V-24 M-10 -32 V-24 M-34 24 V32 M-22 24 V32 M-10 24 V32 M-52 -12 H-44 M-52 0 H-44 M-52 12 H-44" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            <rect x="-44" y="-24" width="48" height="48" rx="7" fill="currentColor"/>
+            <text x="-20" y="7" class="on-color" font-size="18" font-weight="700" text-anchor="middle" font-family="var(--body)">AI</text>
+            <path d="M8 -8 L28 -22 M8 0 H32 M8 8 L28 22" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="36" cy="-26" r="6" class="paper" stroke="currentColor" stroke-width="3"/>
+            <circle cx="40" cy="0" r="6" class="paper" stroke="currentColor" stroke-width="3"/>
+            <circle cx="36" cy="26" r="6" class="paper" stroke="currentColor" stroke-width="3"/>
+          </g>
+
+          <!-- データベース -->
+          <g id="i-db">
+            <path class="db-body" d="M-36 -30 V30 A36 12 0 0 0 36 30 V-30 Z"/>
+            <path class="db-band" d="M-36 -8 A36 12 0 0 0 36 -8 M-36 12 A36 12 0 0 0 36 12"/>
+            <ellipse class="db-top" cx="0" cy="-30" rx="36" ry="12"/>
+          </g>
+
+          <!-- 質問を入力 -->
+          <g id="i-chat">
+            <path d="M-46 -40 H12 a6 6 0 0 1 6 6 V2 a6 6 0 0 1 -6 6 H-24 L-36 20 V8 H-46 a6 6 0 0 1 -6 -6 V-34 a6 6 0 0 1 6 -6 Z" fill="currentColor"/>
+            <path d="M-40 -26 H6 M-40 -14 H6 M-40 -2 H-10" class="on-color" stroke="var(--card)" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M-4 -2 H44 a6 6 0 0 1 6 6 V30 a6 6 0 0 1 -6 6 H36 V48 L24 36 H-4 a6 6 0 0 1 -6 -6 V4 a6 6 0 0 1 6 -6 Z" fill="currentColor" opacity=".7"/>
+          </g>
+
+          <!-- 関連する箇所を取得 -->
+          <g id="i-docs">
+            <path d="M-34 -42 H8 L22 -28 V30 H-34 Z" class="paper" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M-18 -28 H24 L38 -14 V46 H-18 Z" class="paper" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M24 -28 V-14 H38" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M-8 -6 H28 M-8 4 H28 M-8 14 H28 M-8 24 H18 M-8 34 H24" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          </g>
+
+          <!-- AIが回答を作成 -->
+          <g id="i-answer">
+            <path d="M-38 -10 V-4 M-26 -10 V-4 M-14 -10 V-4 M-38 42 V48 M-26 42 V48 M-14 42 V48 M-54 8 H-48 M-54 20 H-48 M-54 32 H-48 M4 8 H10 M4 20 H10 M4 32 H10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            <rect x="-48" y="-4" width="52" height="46" rx="7" fill="currentColor"/>
+            <text x="-22" y="26" class="on-color" font-size="18" font-weight="700" text-anchor="middle" font-family="var(--body)">AI</text>
+            <path d="M8 -46 H46 a6 6 0 0 1 6 6 V-14 a6 6 0 0 1 -6 6 H24 L14 2 V-8 H8 a6 6 0 0 1 -6 -6 V-40 a6 6 0 0 1 6 -6 Z" class="paper" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M12 -34 H42 M12 -22 H34" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          </g>
+
+          <!-- 出典つきで表示 -->
+          <g id="i-screen">
+            <rect x="-48" y="-40" width="96" height="66" rx="5" class="paper" stroke="currentColor" stroke-width="3"/>
+            <path d="M-12 26 L-16 42 H16 L12 26 M-26 44 H26" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+            <rect x="-38" y="-30" width="50" height="20" rx="4" fill="currentColor" opacity=".7"/>
+            <path d="M-38 0 H34 M-38 10 H20" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            <rect x="14" y="4" width="26" height="14" rx="3" fill="currentColor"/>
+            <text x="27" y="14.5" class="on-color" font-size="9" font-weight="700" text-anchor="middle" font-family="var(--body)">p.1</text>
+          </g>
+        </defs>
+
+        <!-- ===== 上の段：取り込み ===== -->
+        <text x="20" y="44" class="h">準備（文書を登録する流れ）</text>
+
+        <g class="ingest">
+          <use href="#i-pdf" x="120" y="150"/>
+          <use href="#i-extract" x="360" y="150"/>
+          <use href="#i-chunk" x="600" y="150"/>
+          <use href="#i-embed" x="840" y="150"/>
+        </g>
+        <use href="#i-db" x="1080" y="150"/>
+
+        <path class="arrow-i" d="M182 150 H290" marker-end="url(#mi)"/>
+        <path class="arrow-i" d="M422 150 H530" marker-end="url(#mi)"/>
+        <path class="arrow-i" d="M662 150 H770" marker-end="url(#mi)"/>
+        <path class="arrow-i" d="M902 150 H1010" marker-end="url(#mi)"/>
+
+        <text x="120" y="232" class="name">PDF</text>
+        <text x="120" y="256" class="tech">今回は PDF 200 本</text>
+        <text x="120" y="275" class="tech">（Word は次の段階）</text>
+
+        <text x="360" y="232" class="name">文章を取り出す</text>
+        <text x="360" y="256" class="tech">ページごとに文字を読む</text>
+        <text x="360" y="275" class="tech">見た目が同じ別の文字をそろえる</text>
+
+        <text x="600" y="232" class="name">小さく区切る</text>
+        <text x="600" y="256" class="tech">約 400 文字の塊にする</text>
+        <text x="600" y="275" class="tech">ファイル名とページ番号つき</text>
+
+        <text x="840" y="232" class="name">AI が意味を数値化</text>
+        <text x="840" y="256" class="tech">OpenAI</text>
+        <text x="840" y="275" class="tech">Embedding API</text>
+
+        <text x="1080" y="232" class="name">データベースに保存</text>
+        <text x="1080" y="256" class="tech">Supabase（東京）</text>
+        <text x="1080" y="275" class="tech">pgvector</text>
+
+        <!-- 保存した塊を、検索で使う -->
+        <path class="link" d="M1080 292 V340 H500 V404" marker-end="url(#ml)"/>
+        <text x="790" y="328" class="tag" fill="var(--search)">保存した塊の中から探す</text>
+
+        <!-- ===== 下の段：検索 ===== -->
+        <text x="20" y="390" class="h">検索（質問に答える流れ）</text>
+
+        <g class="search">
+          <use href="#i-chat" x="100" y="470"/>
+          <use href="#i-embed" x="300" y="470"/>
+          <use href="#i-docs" x="700" y="470"/>
+          <use href="#i-answer" x="900" y="470"/>
+          <use href="#i-screen" x="1100" y="470"/>
+        </g>
+        <use href="#i-db" x="500" y="470"/>
+
+        <path class="arrow-s" d="M158 470 H232" marker-end="url(#ms)"/>
+        <path class="arrow-s" d="M352 470 H436" marker-end="url(#ms)"/>
+        <path class="arrow-s" d="M548 470 H632" marker-end="url(#ms)"/>
+        <path class="arrow-s" d="M748 470 H832" marker-end="url(#ms)"/>
+        <path class="arrow-s" d="M962 470 H1036" marker-end="url(#ms)"/>
+
+        <text x="100" y="552" class="name">質問を入力</text>
+        <text x="100" y="576" class="tech">チャット画面</text>
+        <text x="100" y="595" class="tech">社内メールでログイン</text>
+
+        <text x="300" y="552" class="name">AI が意味を数値化</text>
+        <text x="300" y="576" class="tech">OpenAI</text>
+        <text x="300" y="595" class="tech">Embedding API</text>
+
+        <text x="500" y="552" class="name">近い箇所を探す</text>
+        <text x="500" y="576" class="tech">pgvector</text>
+        <text x="500" y="595" class="tech">意味が近い順に並べる</text>
+
+        <text x="700" y="552" class="name">関連する箇所を取得</text>
+        <text x="700" y="576" class="tech">上位 5 件</text>
+
+        <text x="900" y="552" class="name">AI が回答を作成</text>
+        <text x="900" y="576" class="tech">Claude API</text>
+        <text x="900" y="595" class="tech">Sonnet 4.6</text>
+
+        <text x="1100" y="552" class="name">出典つきで表示</text>
+        <text x="1100" y="576" class="tech">Next.js · Vercel（東京）</text>
+        <text x="1100" y="595" class="tech">ファイル名とページ番号</text>
+      </svg>
+    </div>
+  </section>
+
+  <p class="caption">社内文書検索 AI（RAG）システム全体図</p>
+
+  <div class="notes">
+    <p><strong>文章を数値にする役：</strong>OpenAI Embedding API。Claude API には、この機能がありません。回答を書く役は Claude API（Sonnet 4.6）です。</p>
+    <p><strong>見つからないとき：</strong>文書に書いていない判断や推測はせず、「該当する情報が見つかりません」と返します。</p>
+    <p><strong>次の段階（今回は入れない）：</strong>Word と Confluence の取り込み、部署ごとの閲覧制限、Slack 連携など。</p>
+  </div>
+</main>

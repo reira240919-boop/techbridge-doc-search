@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>社内文書検索AI 説明図</title>
+<style>
+  /* 情報システム部長が社内で説明する図。1600×1120 の1枚を画像にする */
+  :root {
+    --bg: #f3f5f8;
+    --card: #ffffff;
+    --fg: #1d2633;
+    --muted: #5d6878;
+    --rule: #d6dce4;
+    --tokyo: #e8873a;
+    --tokyo-soft: #fdf3ea;
+    --us: #7a8494;
+    --us-soft: #f1f2f5;
+    --office: #2f64a8;
+    --office-soft: #edf3fb;
+    --search: #3f8a3c;
+    --ingest: #2f64a8;
+    --gate: #b42318;
+    --font: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); }
+  body { font-family: var(--font); color: var(--fg); }
+  .canvas { position: relative; width: 1600px; height: 1120px; margin: 0 auto; background: var(--bg); }
+  .abs { position: absolute; }
+
+  header { left: 40px; top: 28px; right: 40px; }
+  header h1 { margin: 0; font-size: 34px; font-weight: 800; letter-spacing: .02em; }
+  header p { margin: 6px 0 0; font-size: 16px; color: var(--muted); }
+
+  .zone { border: 3px solid; padding: 12px 18px; }
+  .zone .label { font-size: 17px; font-weight: 800; }
+  .zone .label small { font-weight: 500; font-size: 14px; color: var(--muted); margin-left: 8px; }
+  .office { border-color: var(--office); background: var(--office-soft); }
+  .office .label { color: var(--office); }
+  .tokyo { border-color: var(--tokyo); background: var(--tokyo-soft); border-width: 4px; }
+  .tokyo .label { color: #b85e17; }
+  .us { border-color: var(--us); background: var(--us-soft); border-style: dashed; }
+  .us .label { color: #4b5463; }
+
+  .box { background: var(--card); border: 2px solid var(--rule); padding: 14px 16px; display: grid; align-content: start; gap: 4px; }
+  .box h2 { margin: 0; font-size: 21px; font-weight: 800; }
+  .box p { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.55; }
+  .box p b { color: var(--fg); font-weight: 700; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .chip { font-size: 13px; padding: 3px 9px; background: var(--tokyo-soft); border: 1px solid #f1c9a5; color: #8a4a12; }
+  .gate { font-size: 13px; font-weight: 700; color: #fff; background: var(--gate); padding: 4px 10px; justify-self: start; margin-top: 6px; }
+
+  .step { font-size: 13.5px; font-weight: 700; line-height: 1.45; white-space: nowrap; background: #fff; border: 1px solid currentColor; padding: 1px 6px; }
+  .step.s { color: var(--search); }
+  .step.i { color: var(--ingest); }
+
+  .legend { right: 40px; top: 40px; display: flex; gap: 18px; font-size: 14px; color: var(--muted); align-items: center; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { display: inline-block; width: 28px; height: 4px; }
+
+  .safety { left: 40px; right: 40px; top: 800px; height: 290px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .safety h3 { margin: 0 0 4px; font-size: 15px; letter-spacing: .08em; color: var(--muted); grid-column: 1 / -1; }
+  .card { background: var(--card); border-top: 5px solid; padding: 16px 18px; display: grid; align-content: start; gap: 8px; }
+  .card h4 { margin: 0; font-size: 19px; font-weight: 800; }
+  .card ul { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; font-size: 13.5px; line-height: 1.6; color: #2c3644; }
+  .card ul small { color: var(--muted); font-size: 13px; }
+  .card.gatec { border-color: var(--gate); }
+  .card.tokyoc { border-color: var(--tokyo); }
+  .card.usc { border-color: var(--us); }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <header class="abs">
+    <h1>社内文書検索AI のしくみと安全の境界</h1>
+    <p>株式会社テックブリッジ　社内説明用 ／ 社内の文書（PDF）に書いてあることだけで、出典つきで答えます</p>
+  </header>
+  <div class="abs legend">
+    <span><i style="background:var(--search)"></i>質問して答えが出るまで（①〜⑤）</span>
+    <span><i style="background:var(--ingest)"></i>文書の取り込み（Ⓐ Ⓑ）</span>
+  </div>
+
+  <!-- 区域 -->
+  <div class="abs zone office" style="left:40px; top:140px; width:300px; height:620px;">
+    <div class="label">社内<small>社員のパソコン</small></div>
+  </div>
+  <div class="abs zone tokyo" style="left:380px; top:140px; width:690px; height:620px;">
+    <div class="label">国内・東京<small>データを置く場所はすべてここ</small></div>
+  </div>
+  <div class="abs zone us" style="left:1110px; top:140px; width:450px; height:620px;">
+    <div class="label">海外・米国<small>処理をするだけ。文書の保管場所ではない</small></div>
+  </div>
+
+  <!-- 箱 -->
+  <div class="abs box" style="left:66px; top:200px; width:248px; height:150px;">
+    <h2>社員</h2>
+    <p>ブラウザ（Chrome など）で質問する。答えの下の出典を押すと、PDF のそのページが開く</p>
+  </div>
+  <div class="abs box" style="left:66px; top:560px; width:248px; height:170px;">
+    <h2>文書の取り込み</h2>
+    <p>PDF 5本（就業規則、経費精算、情報セキュリティ、リモートワーク、IT申請）</p>
+    <p>最初に1回、担当者が行う</p>
+  </div>
+
+  <div class="abs box" style="left:430px; top:196px; width:590px; height:150px;">
+    <h2>サイトと受付</h2>
+    <p><b>Vercel</b>（ウェブサイトを動かすサービス）の東京で動く。質問を受け取り、探す・答えさせる・記録するを順に行う</p>
+    <div class="gate">ログインの門：@techbridge.co.jp の人だけ通す</div>
+  </div>
+  <div class="abs box" style="left:430px; top:560px; width:590px; height:176px;">
+    <h2>文書の保管庫</h2>
+    <p><b>Supabase</b>（データベース＝データをためておく場所）の東京。外から直接は読めない</p>
+    <div class="chips">
+      <span class="chip">文書の切れ端と、その数値</span>
+      <span class="chip">会話の記録（質問と答え）</span>
+      <span class="chip">ログイン情報</span>
+    </div>
+    <p style="margin-top:4px"><b>切れ端</b>＝文書を約500〜1000トークン（文字数のめやす）ずつに分けたもの</p>
+  </div>
+
+  <div class="abs box" style="left:1150px; top:196px; width:370px; height:150px;">
+    <h2>答えを書く AI</h2>
+    <p><b>Claude API</b>（Anthropic 社の AI を、外から呼び出す窓口）。渡された箇所だけを読んで、日本語で答える</p>
+  </div>
+  <div class="abs box" style="left:1150px; top:404px; width:370px; height:130px;">
+    <h2>文章を数値に変える</h2>
+    <p><b>OpenAI Embedding</b>（文章の意味を数の並びに変える機能）。意味が近い文章ほど、近い数になる</p>
+  </div>
+
+  <!-- 矢印 -->
+  <svg class="abs" style="left:0; top:0;" width="1600" height="1120" viewBox="0 0 1600 1120" aria-hidden="true">
+    <defs>
+      <marker id="hs" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3f8a3c"/></marker>
+      <marker id="hi" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2f64a8"/></marker>
+    </defs>
+    <g fill="none" stroke-width="4">
+      <!-- ① 社員 → 受付 -->
+      <path d="M314,250 H426" stroke="#3f8a3c" marker-end="url(#hs)"/>
+      <!-- ⑤ 受付 → 社員 -->
+      <path d="M430,312 H318" stroke="#3f8a3c" marker-end="url(#hs)"/>
+      <!-- ② 受付 → 数値に変える（質問） -->
+      <path d="M1020,322 H1088 V440 H1146" stroke="#3f8a3c" marker-end="url(#hs)"/>
+      <!-- ③ 受付 ⇄ 保管庫 -->
+      <path d="M600,350 V554" stroke="#3f8a3c" marker-start="url(#hs)" marker-end="url(#hs)"/>
+      <!-- ④ 受付 ⇄ AI -->
+      <path d="M1022,250 H1146" stroke="#3f8a3c" marker-start="url(#hs)" marker-end="url(#hs)"/>
+      <!-- Ⓐ 取り込み → 数値に変える -->
+      <path d="M190,560 V500 H1146" stroke="#2f64a8" stroke-dasharray="10 6" marker-end="url(#hi)"/>
+      <!-- Ⓑ 数値に変える → 保管庫 -->
+      <path d="M1335,534 V648 H1026" stroke="#2f64a8" stroke-dasharray="10 6" marker-end="url(#hi)"/>
+    </g>
+  </svg>
+
+  <!-- 矢印の説明 -->
+  <div class="abs step s" style="left:326px; top:224px;">① 質問</div>
+  <div class="abs step s" style="left:326px; top:318px;">⑤ 答え<br>＋出典</div>
+  <div class="abs step s" style="left:1160px; top:362px;">② 質問を数値に</div>
+  <div class="abs step s" style="left:614px; top:400px;">③ 意味が近い箇所を5つ探す／<br>やり取りを記録する</div>
+  <div class="abs step s" style="left:1028px; top:190px;">④ 質問と見つけた<br>箇所だけ送る</div>
+  <div class="abs step i" style="left:206px; top:508px;">Ⓐ 文字を取り出し、切れ端に分けて送る</div>
+  <div class="abs step i" style="left:1040px; top:656px;">Ⓑ 数値にして、保管庫にしまう</div>
+
+  <!-- 安全の境界 -->
+  <section class="abs safety">
+    <h3>安全の境界</h3>
+    <div class="card gatec">
+      <h4>社内メールだけのログイン</h4>
+      <ul>
+        <li>@techbridge.co.jp 以外のメールは、登録の時点で断る<br><small>Auth Hook（登録の直前に動く確認のしくみ）で止める</small></li>
+        <li>ログインしていない人は、質問も PDF も保管庫の中身も取れない（確認済み）</li>
+      </ul>
+    </div>
+    <div class="card tokyoc">
+      <h4>データを置く場所は東京</h4>
+      <ul>
+        <li>文書の切れ端・数値・会話の記録・ログイン情報は、すべて東京の保管庫（Supabase）</li>
+        <li>サイトも東京で動く（Vercel の東京）</li>
+        <li>保管庫は、サイトのサーバーだけが読み書きできる</li>
+      </ul>
+    </div>
+    <div class="card usc">
+      <h4>外に送るもの</h4>
+      <ul>
+        <li>米国の AI に送るのは、質問と、探して見つけた箇所（上位5つ）だけ。答えを作るために使い、保管場所にはしない</li>
+        <li>鍵（API キー＝外のサービスを使うための合言葉）は、サーバーの中だけで使う。画面には出ない</li>
+        <li>文書に無いことは作らず、「該当する情報が見つかりません」と答える</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
