@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+credentials.json
+token.json
+node_modules
+.next
+# Supabase CLI の作業用（接続先の情報が入る）
+supabase/.temp
